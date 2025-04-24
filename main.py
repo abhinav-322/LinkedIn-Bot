@@ -147,37 +147,6 @@ def apply_this_job(job_url):
         
         # Find and click apply button by ID
         try:
-            #  # Open job in new tab
-            # driver.execute_script("window.open('');")
-            # driver.switch_to.window(driver.window_handles[-1])
-            # driver.get(job_url)
-            # print(f"\nProcessing job: {job_url}")
-
-            # Wait for page to load completely
-            # WebDriverWait(driver, 20).until(
-            #     lambda d: d.execute_script("return document.readyState") == "complete"
-            # )
-
-            # # THE MOST RELIABLE SINGLE SELECTOR
-            # apply_button = WebDriverWait(driver, 15).until(
-            #     EC.element_to_be_clickable((By.CSS_SELECTOR, "button.jobs-apply-button.artdeco-button--primary[aria-label^='Easy Apply to']"))
-            # )
-            # print("Found Easy Apply button")
-
-            # # Scroll and click with retries
-            # driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", apply_button)
-            # time.sleep(0.5)
-
-            # try:
-            #     apply_button.click()
-            #     print("Successfully clicked Easy Apply button")
-            # except:
-            #     driver.execute_script("arguments[0].click();", apply_button)
-            #     print("Clicked using JavaScript as fallback")
-
-            # # Proceed with application flow
-            # time.sleep(3)
-
             buttons = driver.find_elements(By.ID, "jobs-apply-button-id")
             for btn in buttons:
                 if btn.is_displayed() and btn.is_enabled():
@@ -191,10 +160,10 @@ def apply_this_job(job_url):
                     next_button = WebDriverWait(driver, 5).until(
                         EC.element_to_be_clickable((By.XPATH, '//button[@aria-label="Continue to next step"]'))
                     )
-                    time.sleep(10)
+                    time.sleep(3)
                     next_button.click()
                     print("Clicked Next button")
-                    time.sleep(2)
+                    time.sleep(10)
 
                 except TimeoutException:
                     print("No Next button, checking for Review or Submit")
@@ -218,6 +187,7 @@ def apply_this_job(job_url):
                         )
                         submit_button.click()
                         print("Clicked Submit button")
+                        time.sleep(3)
                         break  # Exit after submission
                     except TimeoutException:
                         print("No Submit button found. Ending process.")
@@ -241,40 +211,56 @@ def apply_this_job(job_url):
             print(f"Error switching windows: {str(e)}")
         time.sleep(1)  # Brief pause before next job
 
-def easy_jobs():
-    try:
-        driver.get("https://www.linkedin.com/jobs/collections/easy-apply")
-        
-        # Wait for the jobs list to load (better than time.sleep)
-        jobs_list = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "ul.HAmMmoawGPHhdbIJuQdlpxlQHqjwUhE"))
-        )
-        
-        jobs = jobs_list.find_elements(By.TAG_NAME, "li")
-        print(f"Number of available jobs : {len(jobs)}")
-        
-        # Optional: Print job titles
-        # for index, job in enumerate(jobs, 1):
-        #     print(f"{index}. {job.text}")
 
-        for job in jobs:
-            try:
-                job_link = job.find_element(By.CSS_SELECTOR, "a.job-card-container__link")
-                job_url = job_link.get_attribute("href")  
-                
-                print(f"\nOpening job: {job_link.text.strip()}") 
-                print(f"URL: {job_url}")
-                
-                # driver.execute_script("window.open(arguments[0]);", job_url)
-                apply_this_job(job_url)
-                time.sleep(2)  # Wait for the new tab to load
-                
-                # Switch back to the main tab (if needed)
-                driver.switch_to.window(driver.window_handles[0])
-                
-            except Exception as e:
-                print(f"Error processing job: {e}")
-                continue
+
+
+def easy_jobs(num):
+    try:
+        for num in range(1, 11):  # Pages 1 to 10
+            print(f"\n Visiting Page {num}...")
+
+            if num == 1:
+                print("\n This is the first page")
+                driver.get("https://www.linkedin.com/jobs/collections/easy-apply")
+            else:
+                driver.get("https://www.linkedin.com/jobs/collections/easy-apply")
+                time.sleep(3)
+                next_page = f"Page {num}"
+                next_page_button = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, f'//button[@aria-label="{next_page}"]'))
+                )
+                time.sleep(2)
+                # driver.execute_script("arguments[0].click();", next_page_button)
+                next_page_button.click()
+                time.sleep(5)
+        
+            # Wait for the jobs list to load (better than time.sleep)
+            jobs_list = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "ul.DgEiynQuYuEpvLebHnwINfbHjNGcXQNrexRNrM"))
+            )
+            
+            jobs = jobs_list.find_elements(By.TAG_NAME, "li")
+            print(f"Number of available jobs : {len(jobs)}")
+
+            for job in jobs:
+                try:
+                    job_link = job.find_element(By.CSS_SELECTOR, "a.job-card-container__link")
+                    job_url = job_link.get_attribute("href")  
+                    
+                    print(f"\nOpening job: {job_link.text.strip()}") 
+                    print(f"URL: {job_url}")
+                    
+                    # driver.execute_script("window.open(arguments[0]);", job_url)
+                    apply_this_job(job_url)
+                    time.sleep(2)  # Wait for the new tab to load
+                    
+                    # Switch back to the main tab (if needed)
+                    driver.switch_to.window(driver.window_handles[0])
+                    
+                except Exception as e:
+                    print(f"Error processing job: {e}")
+                    continue
+
 
     except Exception as e:
             print(f"Error loading jobs list: {e}")
@@ -284,4 +270,4 @@ def easy_jobs():
 
 
 if linkedin_login():
-    easy_jobs()
+    easy_jobs(1)
